@@ -4,4 +4,4 @@
 # 30/09/2016
 #
 
-install.packages(c("tidyverse", "tidyjson", "sparklyr", "RCurl", "stringr"))
+install.packages(c("tidyverse", "tidyjson", "sparklyr", "RCurl", "stringr", "plotly", "rmarkdown"))
