@@ -21,6 +21,7 @@ library(tidyverse)
 library(sparklyr)
 library(lubridate)
 library(ggplot2)
+library(phoxy)
 
 # Settings for spark
 Sys.setenv(SPARK_HOME="/usr/lib/spark")
@@ -117,12 +118,45 @@ mentions <- phoenix_tbl %>%
     geom_line() +
     theme_bw() +
     scale_x_date(name="Date") +
-    scale_y_continuous(name="Percentage of events")
+    scale_y_continuous(name="Percentage of events",
+                       limits=c(0,1))
 
 # Show plot
 mentions
 
+# Plot map of violent events in Syria.
+# See codebook: https://s3.amazonaws.com/oeda/docs/phoenix_codebook.pdf
 
+# Function to plot map
+plotMap <- function(data, map) {
+  map + 
+    geom_point(data=data, aes(x=lon, y=lat, size=n), 
+                col="red", alpha=0.4) +
+    theme_bw()
+}
 
-# Get number of rows
+# Get map of Syria
+library(ggmap)
+syr = as.numeric(geocode("Syria"))
+syrmap = ggmap(get_googlemap(center=syr, scale=2, zoom=7), extent="normal")
+
+# Get lat/lon of violent events in syria
+syr.events <- phoenix_tbl %>%
+  # Filter where countrycode == SYR & pentaclass == 4
+  filter(countrycode == "SYR",
+         pentaclass == 4) %>%
+  # Group by lat / lon combination & count
+  group_by(lat,lon) %>%
+  tally() %>%
+  arrange(desc(n)) %>%
+  # Collect
+  collect() %>%
+  # Plot
+  plotMap(., syrmap)
+
+# Show
+syr.events
+
+# disconnect from spark
 spark_disconnect(sc)
+
