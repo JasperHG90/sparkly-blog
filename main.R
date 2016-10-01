@@ -21,7 +21,6 @@ library(tidyverse)
 library(sparklyr)
 library(lubridate)
 library(ggplot2)
-library(phoxy)
 
 # Settings for spark
 Sys.setenv(SPARK_HOME="/usr/lib/spark")
@@ -97,10 +96,8 @@ negativeDays <- avg.goldstein$data %>%
   filter(avg_goldstein < (mean(avg_goldstein) - 2*sd(avg_goldstein))) %>%
   arrange(avg_goldstein)
 
-# Show mentions of USA, RUS, CHN and GBR
+# Show mentions events happening in USA, RUS, CHN and GBR
 mentions <- phoenix_tbl %>%
-  # Filter for countries
-  filter(countrycode %in% c("USA", "RUS", "CHN", "GBR")) %>%
   # Group by date and countrycode 
   group_by(datestamp, countrycode) %>%
   # Tally
@@ -111,6 +108,8 @@ mentions <- phoenix_tbl %>%
   group_by(datestamp) %>%
   # Normalize per day
   mutate(norm = n / sum(n)) %>%
+  # Filter for countries
+  filter(countrycode %in% c("USA", "RUS", "CHN", "GBR")) %>%
   # Collect
   collect() %>%
   # Plot
@@ -119,7 +118,7 @@ mentions <- phoenix_tbl %>%
     theme_bw() +
     scale_x_date(name="Date") +
     scale_y_continuous(name="Percentage of events",
-                       limits=c(0,1))
+                       limits=c(0,0.25))
 
 # Show plot
 mentions
